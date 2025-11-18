@@ -36,6 +36,8 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.rustore.bom))
+            implementation(libs.pay)
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
@@ -44,10 +46,16 @@ kotlin {
             implementation(libs.yandex.appmetrica)
             implementation(libs.yandex.appmetrica.analytics)
             implementation(libs.yandex.ads.mobileads)
-            implementation(project.dependencies.platform(libs.rustore.bom))
-            implementation(libs.pay)
         }
         commonMain.dependencies {
+            implementation(projects.data.database)
+            implementation(projects.data.store)
+            implementation(projects.resources)
+            implementation(projects.core.common)
+            implementation(projects.uiKit)
+            implementation(projects.core.navigation)
+            implementation(projects.features.onboarding)
+            implementation(projects.features.settings)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -57,7 +65,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-
             implementation(libs.koin.compose)
             implementation(libs.koin.core)
             implementation(libs.androidx.navigation)
