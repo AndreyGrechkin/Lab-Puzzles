@@ -3,7 +3,7 @@ package com.defey.labpuzzles
 import com.defey.labpuzzles.di.commonModule
 import com.defey.labpuzzles.di.languageModule
 import com.defey.labpuzzles.di.navigationModule
-import com.defey.labpuzzles.di.onboardingModule
+import com.defey.labpuzzles.di.featuresUiModule
 import com.defey.labpuzzles.di.storageModule
 
 private val coreModules
@@ -26,7 +26,7 @@ private val dataModule
 
 private val featureModules
     get() = listOf(
-        onboardingModule
+        featuresUiModule
 //        wellModule,
 //        settingsModule
     )
