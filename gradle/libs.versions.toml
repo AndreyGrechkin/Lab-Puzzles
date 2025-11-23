@@ -12,6 +12,7 @@ androidx-lifecycle = "2.9.6"
 androidx-testExt = "1.3.0"
 composeHotReload = "1.0.0-rc03"
 composeMultiplatform = "1.9.3"
+compose-junit = "1.9.5"
 junit = "4.13.2"
 kotlin = "2.2.21"
 ksp = "2.3.2"
@@ -58,6 +59,7 @@ yandex-appmetrica = { module = "com.yandex.android:mobmetricalib", version.ref =
 yandex-appmetrica-analytics = { module = "io.appmetrica.analytics:analytics", version.ref = "appmetrica-analytics"}
 rustore-appupdate = { group = "ru.rustore.sdk", name = "appupdate", version.ref = "rustore-sdk" }
 yandex-ads-mobileads = { module = "com.yandex.android:mobileads", version.ref = "yandex-mobileads"}
+compose-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit"}
 
 # Room
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "androidxRoom" }

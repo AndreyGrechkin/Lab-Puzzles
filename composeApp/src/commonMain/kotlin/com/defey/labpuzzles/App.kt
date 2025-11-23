@@ -13,8 +13,9 @@ import androidx.navigation.navArgument
 import com.defey.labpuzzles.base.NavigationCommand
 import com.defey.labpuzzles.base.NavigationManager
 import com.defey.labpuzzles.managers.localization.LanguageManager
+import com.defey.labpuzzles.menu.screens.MainMenuScreen
 import com.defey.labpuzzles.models.Screen
-import com.defey.labpuzzles.screens.OnboardingScreen
+import com.defey.labpuzzles.splash.screens.SplashScreen
 import com.defey.labpuzzles.theme.AppTheme
 import com.defey.labpuzzles.utils.createOrientationController
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -66,10 +67,14 @@ fun App() {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.OnboardingScreen.route
+                startDestination = Screen.SplashScreen.route
             ) {
-                composable(Screen.OnboardingScreen.route) {
-                    OnboardingScreen()
+                composable(Screen.SplashScreen.route) {
+                    SplashScreen()
+                }
+
+                composable(Screen.MainMenuScreen.route) {
+                    MainMenuScreen()
                 }
 
                 composable(
@@ -84,7 +89,7 @@ fun App() {
                         }
                     )
                 ) {
-                    OnboardingScreen()
+                    MainMenuScreen()
                 }
             }
         }

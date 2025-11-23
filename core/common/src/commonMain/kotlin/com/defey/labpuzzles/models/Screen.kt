@@ -1,7 +1,8 @@
 package com.defey.labpuzzles.models
 
 sealed class Screen(val route: String) {
-    data object OnboardingScreen : Screen("onboarding")
+    data object SplashScreen : Screen("splash")
+    data object MainMenuScreen : Screen("mainMenu")
     data class Settings(val data: UserData) : Screen("settings/{userName}?score={score}") {
         companion object {
             const val ROUTE = "settings/{userName}?score={score}"
