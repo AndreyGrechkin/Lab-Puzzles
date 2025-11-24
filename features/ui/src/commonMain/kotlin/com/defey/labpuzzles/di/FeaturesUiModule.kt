@@ -1,11 +1,17 @@
 package com.defey.labpuzzles.di
 
+import com.defey.labpuzzles.achievements.AchievementsViewModel
+import com.defey.labpuzzles.gameHub.GameHubViewModel
 import com.defey.labpuzzles.menu.MainMenuViewModel
+import com.defey.labpuzzles.settings.SettingsViewModel
 import com.defey.labpuzzles.splash.SplashViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val featuresUiModule = module {
     viewModel { SplashViewModel(get()) }
-    viewModel { MainMenuViewModel(get()) }
+    viewModel { MainMenuViewModel(get(), get()) }
+    viewModel { AchievementsViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
+    viewModel { GameHubViewModel(get()) }
 }

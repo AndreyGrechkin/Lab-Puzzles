@@ -1,4 +1,16 @@
 <resources>
     <string name="app_name">LabPuzzles</string>
+    <!--    Splash Screen-->
     <string name="splash_loading">Загрузка лаборатории...</string>
+
+    <!--    Main Menu Screen-->
+    <string name="main_continue">ПРОДОЛЖИТЬ</string>
+    <string name="main_new_game">НОВАЯ ИГРА</string>
+    <string name="main_achievements">ДОСТИЖЕНИЯ</string>
+    <string name="main_settings">НАСТРОЙКИ</string>
+    <string name="version">Версия v%s</string>
+    <string name="new_game_dialog_title">Начать заново?</string>
+    <string name="new_game_dialog_message">Текущий прогресс будет утерян. Вы уверены?</string>
+    <string name="new_game_dialog_confirm">Начать</string>
+    <string name="new_game_dialog_cancel">Отмена</string>
 </resources>

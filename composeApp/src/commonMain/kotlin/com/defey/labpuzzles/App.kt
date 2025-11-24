@@ -10,17 +10,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.defey.labpuzzles.achievements.screen.AchievementsScreen
 import com.defey.labpuzzles.base.NavigationCommand
 import com.defey.labpuzzles.base.NavigationManager
+import com.defey.labpuzzles.gameHub.screens.GameHubScreen
 import com.defey.labpuzzles.managers.localization.LanguageManager
 import com.defey.labpuzzles.menu.screens.MainMenuScreen
 import com.defey.labpuzzles.models.Screen
+import com.defey.labpuzzles.settings.screens.SettingsScreen
 import com.defey.labpuzzles.splash.screens.SplashScreen
 import com.defey.labpuzzles.theme.AppTheme
 import com.defey.labpuzzles.utils.createOrientationController
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
-
 
 @Composable
 @Preview
@@ -37,8 +39,8 @@ fun App() {
             when (val command = navigationState) {
                 is NavigationCommand.Navigate -> {
                     navController.navigate(command.route) {
-                        command.options.popUpToRoute?.let { popUpToRoute ->
-                            popUpTo(popUpToRoute) {
+                        command.options.popUpToRoute?.let {
+                            popUpTo(0) {
                                 inclusive = command.options.inclusive
                                 saveState = command.options.saveState
                             }
@@ -75,6 +77,18 @@ fun App() {
 
                 composable(Screen.MainMenuScreen.route) {
                     MainMenuScreen()
+                }
+
+                composable(Screen.AchievementsScreen.route) {
+                    AchievementsScreen()
+                }
+
+                composable(Screen.SettingsScreen.route) {
+                    SettingsScreen()
+                }
+
+                composable(Screen.GameHubScreen.route) {
+                    GameHubScreen()
                 }
 
                 composable(

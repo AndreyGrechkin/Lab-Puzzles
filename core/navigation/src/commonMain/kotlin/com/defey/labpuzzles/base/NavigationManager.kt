@@ -39,7 +39,7 @@ class NavigationManager {
     fun clearBackStack(newDestination: Screen) {
         _navigationState.value = NavigationCommand.Navigate(
             newDestination.route,
-            NavOptions(popUpToRoute = null, inclusive = true)
+            NavOptions(popUpToRoute = "", inclusive = true)
         )
     }
 
