@@ -13,5 +13,5 @@ val featuresUiModule = module {
     viewModel { MainMenuViewModel(get(), get()) }
     viewModel { AchievementsViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { GameHubViewModel(get()) }
+    viewModel { GameHubViewModel(get(), get()) }
 }

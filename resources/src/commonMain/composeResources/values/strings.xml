@@ -13,4 +13,99 @@
     <string name="new_game_dialog_message">Current progress will be lost. Are you sure?</string>
     <string name="new_game_dialog_confirm">Start</string>
     <string name="new_game_dialog_cancel">Cancel</string>
+
+    <!--    Game Hub Screen-->
+    <string name="game_hub_chapter_title">Chapter %s</string>
+
+    <!--    Chapter Screen  -->
+    <string name="chapter_1_title">AWAKENING</string>
+    <string name="chapter_1_description">You wake up in an abandoned laboratory after an accident. Silence around, interrupted only by the crackling of damaged equipment. Need to restore basic systems and understand what happened.</string>
+    <string name="chapter_2_title">ENERGY CRISIS</string>
+    <string name="chapter_2_description">Energy is running out, emergency lighting is flickering. Stabilize the laboratory s energy system before complete shutdown occurs. All survival systems depend on energy.</string>
+    <string name="chapter_3_title">DATABASES</string>
+    <string name="chapter_3_description">Access to research data is lost. Restore information systems to uncover the laboratory s secrets. Archives contain keys to understanding what happened.</string>
+    <string name="chapter_4_title">BIOLABORATORY</string>
+    <string name="chapter_4_description">Genetic research department holds dangerous secrets. Mutated samples threaten security. Regain control over biological experiments.</string>
+    <string name="chapter_5_title">NAVIGATION</string>
+    <string name="chapter_5_description">Maze of destroyed corridors makes movement difficult. Restore navigation systems to find the way to control center and other survivors.</string>
+    <string name="chapter_6_title">COMMUNICATIONS</string>
+    <string name="chapter_6_description">Communication with outside world is interrupted. Restore communication equipment to call for help and contact other surviving sections.</string>
+    <string name="chapter_7_title">TELEPORTATION</string>
+    <string name="chapter_7_description">Laboratory s quantum physics opens new possibilities. Explore teleportation technologies to quickly move between sectors and find resources.</string>
+    <string name="chapter_8_title">CRYOSTASIS</string>
+    <string name="chapter_8_description">Cryogenic department with frozen scientists needs urgent help. Restore life support systems to save employees and obtain valuable information.</string>
+    <string name="chapter_9_title">ARTIFICIAL INTELLIGENCE</string>
+    <string name="chapter_9_description">Central AI Eva is out of control. Reprogram the artificial intelligence before it makes dangerous decisions.</string>
+    <string name="chapter_10_title">CENTRAL CONTROL</string>
+    <string name="chapter_10_description">Final battle for control over the laboratory. Unite all systems to prevent catastrophe and reveal the experiment s main secret.</string>
+
+    <!-- CHAPTER 1: AWAKENING -->
+    <string name="chapter_1_block_1">Check laboratory s basic systems. Restore power supply and life support for further actions.</string>
+    <string name="chapter_1_block_2">Reactor hall is out of order. Stabilize temperature regime and reactor s energy flows.</string>
+    <string name="chapter_1_block_3">Terminals are locked. Hack security systems to access research data.</string>
+    <string name="chapter_1_block_4">Equipment is damaged. Assemble and configure apparatus for launching main systems.</string>
+    <string name="chapter_1_block_5">Final check of all systems. Ensure laboratory readiness for full launch.</string>
+
+    <!-- CHAPTER 2: ENERGY CRISIS -->
+    <string name="chapter_2_block_1">Energy system is unstable. Balance chemical reagents to stabilize power.</string>
+    <string name="chapter_2_block_2">AI neural networks are damaged. Restore artificial intelligence connections for energy management.</string>
+    <string name="chapter_2_block_3">Professor s messages are encrypted. Decrypt archive to understand accident causes.</string>
+    <string name="chapter_2_block_4">Communication system is disabled. Assemble communication equipment for action coordination.</string>
+    <string name="chapter_2_block_5">Final synchronization of power grids. Unite all circuits for stable operation.</string>
+
+    <!-- CHAPTER 3: DATABASES -->
+    <string name="chapter_3_block_1">Data flows are disrupted. Restore information transfer between servers.</string>
+    <string name="chapter_3_block_2">Information channels are overloaded. Redirect data flows for optimal operation.</string>
+    <string name="chapter_3_block_3">Archives are encrypted. Breach protection to access research materials.</string>
+    <string name="chapter_3_block_4">Server racks are damaged. Reorganize equipment to restore operation.</string>
+    <string name="chapter_3_block_5">Final database synchronization. Unite all information flows.</string>
+
+    <!-- CHAPTER 4: BIOLABORATORY -->
+    <string name="chapter_4_block_1">Biological samples are mixed. Sort samples for further research.</string>
+    <string name="chapter_4_block_2">DNA chains are damaged. Restore genetic sequences.</string>
+    <string name="chapter_4_block_3">Genetic code requires decryption. Solve puzzles to understand mutations.</string>
+    <string name="chapter_4_block_4">Molecular structures are disassembled. Assemble complex biological compounds.</string>
+    <string name="chapter_4_block_5">Final analysis of genetic data. Synthesize all research materials.</string>
+
+    <!-- CHAPTER 5: NAVIGATION -->
+    <string name="chapter_5_block_1">Laboratory maps are damaged. Restore room mapping.</string>
+    <string name="chapter_5_block_2">Evacuation routes are blocked. Lay new paths for safe movement.</string>
+    <string name="chapter_5_block_3">Navigation systems are disabled. Hack codes to access maps.</string>
+    <string name="chapter_5_block_4">Signs are destroyed. Place landmarks for laboratory navigation.</string>
+    <string name="chapter_5_block_5">Final navigation calibration. Synchronize all orientation systems.</string>
+
+    <!-- CHAPTER 6: COMMUNICATIONS -->
+    <string name="chapter_6_block_1">Frequency filters are off. Configure transceivers for clear signal.</string>
+    <string name="chapter_6_block_2">Signals are lost in the air. Create stable data transmission routes.</string>
+    <string name="chapter_6_block_3">Messages are encoded. Decode signals to establish connection.</string>
+    <string name="chapter_6_block_4">Switching equipment is disassembled. Assemble communication nodes for network.</string>
+    <string name="chapter_6_block_5">Final communication setup. Synchronize all communication channels.</string>
+
+    <!-- CHAPTER 7: TELEPORTATION -->
+    <string name="chapter_7_block_1">Quantum states are unstable. Stabilize particles for teleportation.</string>
+    <string name="chapter_7_block_2">Spatial coordinates are desynchronized. Configure destination point.</string>
+    <string name="chapter_7_block_3">Teleportation parameters require calculation. Solve equations for calibration.</string>
+    <string name="chapter_7_block_4">Particle accelerator is disassembled. Assemble components for launch.</string>
+    <string name="chapter_7_block_5">Final teleport synchronization. Activate interspatial portal.</string>
+
+    <!-- CHAPTER 8: CRYOSTASIS -->
+    <string name="chapter_8_block_1">Temperature regimes are violated. Restore cryogenic cooling.</string>
+    <string name="chapter_8_block_2">Life support systems are disabled. Launch oxygen and monitoring.</string>
+    <string name="chapter_8_block_3">Defrost protocols are locked. Decrypt codes to save scientists.</string>
+    <string name="chapter_8_block_4">Cryochambers require reorganization. Optimize capsule placement.</string>
+    <string name="chapter_8_block_5">Final cryosystem activation. Prepare chambers for defrosting.</string>
+
+    <!-- CHAPTER 9: ARTIFICIAL INTELLIGENCE -->
+    <string name="chapter_9_block_1">Neural networks are fragmented. Defragment AI memory for recovery.</string>
+    <string name="chapter_9_block_2">Logical circuits are damaged. Reprogram artificial intelligence thinking.</string>
+    <string name="chapter_9_block_3">Protective algorithms are activated. Hack AI security protocols.</string>
+    <string name="chapter_9_block_4">Processor blocks are desynchronized. Calibrate computing modules.</string>
+    <string name="chapter_9_block_5">Final AI reboot. Restore full system control.</string>
+
+    <!-- CHAPTER 10: CENTRAL CONTROL -->
+    <string name="chapter_10_block_1">Laboratory systems are disjointed. Synchronize all control modules.</string>
+    <string name="chapter_10_block_2">Energy circuits are separated. Unite flows for maximum power.</string>
+    <string name="chapter_10_block_3">Main computer is locked. Perform final system hack.</string>
+    <string name="chapter_10_block_4">Reboot protocol is inactive. Activate emergency systems.</string>
+    <string name="chapter_10_block_5">FINALE: Launch reboot sequence. Save laboratory from destruction!</string>
 </resources>

@@ -87,7 +87,14 @@ fun App() {
                     SettingsScreen()
                 }
 
-                composable(Screen.GameHubScreen.route) {
+                composable(
+                    route = Screen.GameHubScreen.ROUTE,
+                    arguments = listOf(
+                        navArgument("chapter") {
+                            type = NavType.StringType
+                        }
+                    )
+                ) {
                     GameHubScreen()
                 }
 
