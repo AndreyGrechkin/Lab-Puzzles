@@ -31,6 +31,7 @@ import org.jetbrains.compose.resources.stringResource
 fun ChaptersListItem(
     chapterItem: ChaptersUiContract.ChapterListItem,
     onChapterSelect: (Chapter) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isUnlocked = chapterItem.isUnlocked
     val isCompleted = chapterItem.completedLevels == 100
