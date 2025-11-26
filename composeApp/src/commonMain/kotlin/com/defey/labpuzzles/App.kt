@@ -13,6 +13,7 @@ import androidx.navigation.navArgument
 import com.defey.labpuzzles.achievements.screen.AchievementsScreen
 import com.defey.labpuzzles.base.NavigationCommand
 import com.defey.labpuzzles.base.NavigationManager
+import com.defey.labpuzzles.chapters.screens.ChaptersScreen
 import com.defey.labpuzzles.gameHub.screens.GameHubScreen
 import com.defey.labpuzzles.managers.localization.LanguageManager
 import com.defey.labpuzzles.menu.screens.MainMenuScreen
@@ -85,6 +86,10 @@ fun App() {
 
                 composable(Screen.SettingsScreen.route) {
                     SettingsScreen()
+                }
+
+                composable(Screen.ChaptersScreen.route) {
+                    ChaptersScreen()
                 }
 
                 composable(

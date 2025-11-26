@@ -5,6 +5,7 @@ sealed class Screen(val route: String) {
     data object MainMenuScreen : Screen("mainMenu")
     data object AchievementsScreen : Screen("achievements")
     data object SettingsScreen : Screen("settings")
+    data object ChaptersScreen : Screen("chapters")
     data class GameHubScreen(val chapter: Chapter) : Screen("gameHub/{chapter}") {
         companion object {
             const val ROUTE = "gameHub/{chapter}"

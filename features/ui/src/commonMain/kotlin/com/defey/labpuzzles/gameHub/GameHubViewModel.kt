@@ -7,6 +7,7 @@ import com.defey.labpuzzles.models.Chapter
 import com.defey.labpuzzles.models.GameType
 import com.defey.labpuzzles.models.LevelBlock
 import com.defey.labpuzzles.models.LevelState
+import com.defey.labpuzzles.models.Screen
 
 class GameHubViewModel(
     savedStateHandle: SavedStateHandle,
@@ -34,7 +35,8 @@ class GameHubViewModel(
         when (event) {
             GameHubUiContract.Event.OnAchievementsClick -> println("Event: $event")
             is GameHubUiContract.Event.OnAddCurrencyClick -> println("Event: ${event.currencyType}")
-            GameHubUiContract.Event.OnChapterClick -> println("Event: $event")
+            GameHubUiContract.Event.OnChapterClick ->
+                navigationManager.navigate(Screen.ChaptersScreen)
             GameHubUiContract.Event.OnDailyQuestsClick -> println("Event: $event")
             GameHubUiContract.Event.OnSettingsClick -> println("Event: $event")
             is GameHubUiContract.Event.OnLevelClick -> println("Opening level: ${event.levelId}")
