@@ -39,7 +39,8 @@ class GameHubViewModel(
                 navigationManager.navigate(Screen.ChaptersScreen)
             GameHubUiContract.Event.OnDailyQuestsClick -> println("Event: $event")
             GameHubUiContract.Event.OnSettingsClick -> println("Event: $event")
-            is GameHubUiContract.Event.OnLevelClick -> println("Opening level: ${event.levelId}")
+            is GameHubUiContract.Event.OnLevelClick ->
+                navigationManager.navigate(Screen.WaterSortScreen.createRoute(event.levelId.toString()))
             GameHubUiContract.Event.OnNextBlockClick -> {
                 println("Event: $event")
                 val nextBlock = getNextBlock(state.value.currentBlock)

@@ -5,6 +5,8 @@ import com.defey.labpuzzles.di.languageModule
 import com.defey.labpuzzles.di.navigationModule
 import com.defey.labpuzzles.di.featuresUiModule
 import com.defey.labpuzzles.di.storageModule
+import com.defey.labpuzzles.di.timerModule
+import com.defey.labpuzzles.di.waterSortEngineModule
 import org.koin.core.module.Module
 
 expect val versionModule: Module
@@ -12,6 +14,8 @@ private val coreModules
     get() = listOf(
         commonModule,
         navigationModule,
+        timerModule,
+        waterSortEngineModule,
 //        uiKitModule,
         languageModule,
 //        commonAnalyticsModule,

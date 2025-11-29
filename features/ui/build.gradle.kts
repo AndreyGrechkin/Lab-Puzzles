@@ -31,6 +31,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.android.lottie)
+            implementation(libs.kotlinx.datetime)
         }
 
         androidMain.dependencies {

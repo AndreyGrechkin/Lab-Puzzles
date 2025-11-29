@@ -12,6 +12,13 @@ sealed class Screen(val route: String) {
             fun createRoute(chapter: Chapter) = "gameHub/${chapter.name}"
         }
     }
+
+    data class WaterSortScreen(val levelId: String) : Screen("waterSort/{levelId}") {
+        companion object {
+            const val ROUTE = "waterSort/{levelId}"
+            fun createRoute(levelId: String) = "waterSort/${levelId}"
+        }
+    }
     data class Settings(val data: UserData) : Screen("settings/{userName}?score={score}") {
         companion object {
             const val ROUTE = "settings/{userName}?score={score}"

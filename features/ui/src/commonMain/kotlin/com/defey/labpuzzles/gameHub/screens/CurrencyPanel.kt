@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.defey.labpuzzles.gameHub.GameHubUiContract
 import com.defey.labpuzzles.models.CurrencyType
+import com.defey.labpuzzles.models.PlayerCurrencies
 import com.defey.labpuzzles.resources.Res
 import com.defey.labpuzzles.resources.icon_energy
 import com.defey.labpuzzles.resources.icon_experience
@@ -31,7 +31,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun CurrencyPanel(
-    currencies: GameHubUiContract.PlayerCurrencies,
+    currencies: PlayerCurrencies,
     onAddCurrencyClick: (CurrencyType) -> Unit,
     modifier: Modifier = Modifier
 ) {

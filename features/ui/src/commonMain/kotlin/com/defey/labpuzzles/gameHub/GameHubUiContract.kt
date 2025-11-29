@@ -8,6 +8,7 @@ import com.defey.labpuzzles.models.CurrencyType
 import com.defey.labpuzzles.models.GameType
 import com.defey.labpuzzles.models.LevelBlock
 import com.defey.labpuzzles.models.LevelState
+import com.defey.labpuzzles.models.PlayerCurrencies
 
 class GameHubUiContract {
 
@@ -15,7 +16,7 @@ class GameHubUiContract {
         val currentChapter: Chapter = Chapter.CHAPTER_1,
         val currencies: PlayerCurrencies = PlayerCurrencies(),
         val currentBlock: LevelBlock = LevelBlock.BLOCK_1,
-        val blockProgress: Float = 0.8f, // 80%
+        val blockProgress: Float = 0.8f,
         val levelsCompleted: Int = 16,
         val totalLevels: Int = 20,
         val levels: List<LevelUI> = emptyList(),
@@ -36,14 +37,6 @@ class GameHubUiContract {
     sealed interface Action : UiAction {
 
     }
-
-    data class PlayerCurrencies(
-        val experience: Int = 1500,
-        val sciencePoints: Int = 250,
-        val premiumCrystals: Int = 25,
-        val energy: Int = 50,
-        val maxEnergy: Int = 100
-    )
 
     data class LevelUI(
         val id: Int,

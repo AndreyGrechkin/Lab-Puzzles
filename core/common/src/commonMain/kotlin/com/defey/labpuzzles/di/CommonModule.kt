@@ -7,7 +7,6 @@ import org.koin.dsl.module
 
 val commonModule
     get() = module {
-//        factory<CommonTimer> { TimerFactory.create() }
         single<LanguageManager> { LanguageManagerImpl(get(), get()) }
     }
 
@@ -15,5 +14,7 @@ val languageModule
     get() = module {
         includes(platformLanguageModule())
     }
+
+expect val timerModule: Module
 
 internal expect fun platformLanguageModule(): Module

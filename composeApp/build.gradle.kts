@@ -54,6 +54,7 @@ kotlin {
             implementation(projects.core.common)
             implementation(projects.uiKit)
             implementation(projects.core.navigation)
+            implementation(projects.core.engines)
             implementation(projects.features.ui)
             implementation(compose.runtime)
             implementation(compose.foundation)

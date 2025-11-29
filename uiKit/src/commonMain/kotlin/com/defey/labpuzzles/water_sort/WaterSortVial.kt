@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 
@@ -20,10 +21,11 @@ import kotlin.math.sqrt
 fun WaterSortVial(
     colors: List<Color>,
     capacity: Int = 4,
+    totalWidth: Dp,
     isSelected: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val totalWidth = 40.dp
+    val totalWidth = totalWidth
     val totalHeight = totalWidth * 3
     if (colors.size > capacity) return
 
@@ -31,8 +33,8 @@ fun WaterSortVial(
         modifier = modifier
             .size(totalWidth, totalHeight)
     ) {
-        val width = size.width
-        val height = size.height
+        val width = totalWidth.toPx()
+        val height = totalHeight.toPx()
 
         // Параметры из описания:
         val neckOval1Height = (totalWidth / 4).toPx()  // Первый овал горлышка
@@ -67,7 +69,6 @@ fun WaterSortVial(
         // 3. ТЕЛО ПРОБИРКИ
         val bodyWidth = width * 0.7f
         val bodyLeft = (width - bodyWidth) / 2
-        println("bodyLeft: bodyWidth $bodyWidth, width $width")
         drawRect(
             brush = Brush.verticalGradient(
                 colors = listOf(
@@ -126,7 +127,7 @@ fun WaterSortVial(
 
         // Полуокружность
         drawArc(
-            color = if (isSelected) Color.Black else Color(0xFF4A90E2),
+            color = if (isSelected) Color(0xFF00F5FF) else Color(0xFF4A90E2),
             startAngle = 0f,
             sweepAngle = 180f,
             useCenter = false,
@@ -143,7 +144,7 @@ fun WaterSortVial(
             val segmentHeight = liquidAreaHeight / capacity
             val arcBeginPosition = height - bodyWidth / 2
 
-            colors.reversed().forEachIndexed { index, color ->
+            colors.forEachIndexed { index, color ->
                 val liquidColor = color.copy(alpha = 0.9f)
                 val yPosition = liquidAreaBottom - (segmentHeight * (index + 1))
                 when {

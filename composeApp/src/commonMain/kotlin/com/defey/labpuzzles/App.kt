@@ -22,6 +22,7 @@ import com.defey.labpuzzles.settings.screens.SettingsScreen
 import com.defey.labpuzzles.splash.screens.SplashScreen
 import com.defey.labpuzzles.theme.AppTheme
 import com.defey.labpuzzles.utils.createOrientationController
+import com.defey.labpuzzles.watersort.screens.WaterSortScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 
@@ -101,6 +102,17 @@ fun App() {
                     )
                 ) {
                     GameHubScreen()
+                }
+
+                composable(
+                    route = Screen.WaterSortScreen.ROUTE,
+                    arguments = listOf(
+                        navArgument("levelId") {
+                            type = NavType.StringType
+                        }
+                    )
+                ) {
+                    WaterSortScreen()
                 }
 
                 composable(
