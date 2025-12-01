@@ -15,11 +15,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.defey.labpuzzles.extensions.toComposeColor
 import kotlin.math.sqrt
 
 @Composable
 fun WaterSortVial(
-    colors: List<Color>,
+    colorsInt: List<Int>,
     capacity: Int = 4,
     totalWidth: Dp,
     isSelected: Boolean = false,
@@ -27,7 +28,8 @@ fun WaterSortVial(
 ) {
     val totalWidth = totalWidth
     val totalHeight = totalWidth * 3
-    if (colors.size > capacity) return
+    val colors = colorsInt.map { it.toComposeColor() }
+    if (colorsInt.size > capacity) return
 
     Canvas(
         modifier = modifier
@@ -70,13 +72,7 @@ fun WaterSortVial(
         val bodyWidth = width * 0.7f
         val bodyLeft = (width - bodyWidth) / 2
         drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFB8E0F0).copy(alpha = 0.4f),
-                    Color(0xFFE8F4F8).copy(alpha = 0.4f)
-                )
-            ),
-
+            color = Color(0xFFE8F4F8).copy(alpha = 0.4f),
             topLeft = Offset(bodyLeft, neckOval2Height - stroke / 2),
             size = Size(bodyWidth, height - bodyWidth / 2 - neckOval2Height)
         )
@@ -87,7 +83,7 @@ fun WaterSortVial(
             startAngle = 0f,
             sweepAngle = 180f,
             useCenter = true,
-            topLeft = Offset(bodyLeft, height - bodyWidth - stroke / 2),
+            topLeft = Offset(bodyLeft, height - bodyWidth - stroke / 2 - 0.15f),
             size = Size(bodyWidth, bodyWidth)
         )
 
@@ -145,7 +141,7 @@ fun WaterSortVial(
             val arcBeginPosition = height - bodyWidth / 2
 
             colors.forEachIndexed { index, color ->
-                val liquidColor = color.copy(alpha = 0.9f)
+//                val liquidColor = color.copy(alpha = 0.9f)
                 val yPosition = liquidAreaBottom - (segmentHeight * (index + 1))
                 when {
                     segmentHeight <= bodyWidth / 2 && yPosition > arcBeginPosition -> {
@@ -176,7 +172,7 @@ fun WaterSortVial(
 
                     arcBeginPosition in yPosition..(yPosition + segmentHeight) -> {
                         drawRect(
-                            color = liquidColor,
+                            color = color,
                             topLeft = Offset(bodyLeft + stroke / 2, yPosition),
                             size = Size(bodyWidth - stroke, arcBeginPosition - yPosition)
                         )
@@ -208,7 +204,7 @@ fun WaterSortVial(
                     else -> {
                         // Основная часть - прямой прямоугольник
                         drawRect(
-                            color = liquidColor,
+                            color = color,
                             topLeft = Offset(bodyLeft + stroke / 2, yPosition),
                             size = Size(bodyWidth - stroke, segmentHeight)
                         )

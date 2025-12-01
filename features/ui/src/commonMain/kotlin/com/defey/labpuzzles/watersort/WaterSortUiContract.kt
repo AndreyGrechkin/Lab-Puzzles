@@ -23,6 +23,7 @@ class WaterSortUiContract {
 
     sealed interface Event : UiEvent {
         data object OnBackClick : Event
+        data object OnRetry : Event
         data class OnAddCurrencyClick(val currencyType: CurrencyType) : Event
         data class OnVialClick(val index: Int, val direction: PourDirection?) : Event
     }

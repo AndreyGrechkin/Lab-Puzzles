@@ -1,22 +1,25 @@
 package com.defey.labpuzzles.watersort
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import com.defey.labpuzzles.base.NavigationManager
 import com.defey.labpuzzles.base_viewModel.BaseViewModel
 import com.defey.labpuzzles.managers.timer.ForwardTimer
+import com.defey.labpuzzles.models.Difficulty
 import com.defey.labpuzzles.models.ErrorGameResult
 import com.defey.labpuzzles.models.SuccessGameResult
 import com.defey.labpuzzles.models.Vial
 import com.defey.labpuzzles.models.WaterSortState
+import com.defey.labpuzzles.repository.WaterSortLevelGenerator
 import com.defey.labpuzzles.repository.WaterSortEngine
 import com.defey.labpuzzles.water_sort.PourAnimationState
 import com.defey.labpuzzles.water_sort.PourDirection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class WaterSortViewModel(
@@ -24,6 +27,7 @@ class WaterSortViewModel(
     private val navigationManager: NavigationManager,
     private val waterSortEngine: WaterSortEngine,
     private val forwardTimer: ForwardTimer,
+    private val levelGenerator: WaterSortLevelGenerator
 ) : BaseViewModel<WaterSortUiContract.Event,
         WaterSortUiContract.State,
         WaterSortUiContract.Action
@@ -31,6 +35,7 @@ class WaterSortViewModel(
 
     private val _animationState = MutableStateFlow<PourAnimationState>(PourAnimationState.Idle)
     val animationState: StateFlow<PourAnimationState> = _animationState.asStateFlow()
+    private var currentLevel: List<Vial> = emptyList()
 
     init {
 
@@ -49,6 +54,22 @@ class WaterSortViewModel(
             }
 
             is WaterSortUiContract.Event.OnVialClick -> onVialSelected(event.index, event.direction)
+            WaterSortUiContract.Event.OnRetry -> {
+                forwardTimer.stop()
+                updateState {
+                   copy(vials = emptyList())
+                }
+                updateState {
+                    copy(
+                        vials = currentLevel,
+                        movesCount = 0,
+                        selectedVialIndex = null,
+                        isLevelCompleted = false,
+                        elapsedTime = 0L
+                    )
+                }
+                startTimer()
+            }
         }
     }
 
@@ -58,36 +79,26 @@ class WaterSortViewModel(
     }
 
     private fun startNewGame() {
-        // Моковые данные для тестирования
-        forwardTimer.stop()
-        _animationState.value = PourAnimationState.Idle
-        val initialVials = createTestLevel()
-
-        updateState {
-            copy(
-                vials = initialVials,
-                movesCount = 0,
-                selectedVialIndex = null,
-                isLevelCompleted = false,
-                elapsedTime = 0L
-            )
+        viewModelScope.launch(Dispatchers.Default) {
+                val resultLevel = levelGenerator.generateLevel(state.value.levelId, Difficulty.EXPERT)
+                withContext(Dispatchers.Main) {
+                    forwardTimer.stop()
+                    _animationState.value = PourAnimationState.Idle
+                    currentLevel = resultLevel
+                    updateState {
+                        copy(
+                            vials = resultLevel,
+                            movesCount = 0,
+                            selectedVialIndex = null,
+                            isLevelCompleted = false,
+                            elapsedTime = 0L
+                        )
+                    }
+                    startTimer()
+                }
+            }
         }
 
-        startTimer()
-    }
-
-    private fun createTestLevel(): List<Vial> {
-        return listOf(
-            // 7 разных цветов + 1 пустая пробирка
-            Vial(colors = listOf(Color.Red, Color.Red, Color.Blue, Color.Blue)),
-            Vial(colors = listOf(Color.Blue, Color.Green, Color.Green)),
-            Vial(colors = listOf(Color.Yellow, Color.Yellow, Color.Green)),
-            Vial(colors = listOf(Color.Yellow, Color.Yellow, Color.Blue)),
-            Vial(colors = listOf(Color.Green)),
-            Vial(colors = listOf(Color.Red, Color.Red)),
-
-            )
-    }
 
     private fun startTimer() {
         forwardTimer.start(
@@ -149,7 +160,7 @@ class WaterSortViewModel(
     private fun startSelectAnimation(selectedIndex: Int) {
         viewModelScope.launch {
             _animationState.value = PourAnimationState.SelectingVial(selectedIndex, 0f)
-            animateProgress(500L) { progress ->
+            animateProgress(300L) { progress ->
                 _animationState.value = PourAnimationState.SelectingVial(selectedIndex, progress)
             }
             _animationState.value = PourAnimationState.VialLifted(selectedIndex)
@@ -159,7 +170,7 @@ class WaterSortViewModel(
     private fun startDeselectAnimation(selectedIndex: Int) {
         viewModelScope.launch {
             _animationState.value = PourAnimationState.DeselectingVial(selectedIndex, 0f)
-            animateProgress(500L) { progress ->
+            animateProgress(300L) { progress ->
                 _animationState.value = PourAnimationState.DeselectingVial(selectedIndex, progress)
             }
             _animationState.value = PourAnimationState.Idle
@@ -178,21 +189,21 @@ class WaterSortViewModel(
 
             _animationState.value =
                 PourAnimationState.MovingToTarget(fromIndex, toIndex, direction, 0f)
-            animateProgress(1000L) { progress ->
+            animateProgress(400L) { progress ->
                 _animationState.value =
                     PourAnimationState.MovingToTarget(fromIndex, toIndex, direction, progress)
             }
 
             _animationState.value =
                 PourAnimationState.PouringStream(fromIndex, toIndex, direction, color, 0f)
-            animateProgress(1000L) { progress ->
+            animateProgress(400L) { progress ->
                 _animationState.value =
                     PourAnimationState.PouringStream(fromIndex, toIndex, direction, color, progress)
             }
 
             _animationState.value =
                 PourAnimationState.ReturningBack(fromIndex, toIndex, direction, 0f)
-            animateProgress(1000L) { progress ->
+            animateProgress(400L) { progress ->
                 _animationState.value =
                     PourAnimationState.ReturningBack(fromIndex, toIndex, direction, progress)
             }

@@ -28,7 +28,7 @@ sealed class PourAnimationState {
         val sourceIndex: Int,
         val targetIndex: Int,
         val direction: PourDirection,
-        val color: Color,
+        val color: Int,
         val progress: Float
     ) : PourAnimationState()
 

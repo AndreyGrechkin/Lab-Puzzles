@@ -21,7 +21,10 @@ class WaterSortEngineImpl : WaterSortEngine {
             return ErrorGameResult(state, validity)
         }
 
-        val newVials = performMove(state.vials, fromIndex, toIndex)
+        val newVials = performMove(state.vials, fromIndex, toIndex) ?: return ErrorGameResult(
+            state,
+            WaterSortError.INVALID_SOURCE
+        )
         val newState = state.copy(
             vials = newVials,
             movesCount = state.movesCount + 1
@@ -65,7 +68,7 @@ class WaterSortEngineImpl : WaterSortEngine {
         return WaterSortError.VALID
     }
 
-    private fun performMove(vials: List<Vial>, fromIndex: Int, toIndex: Int): List<Vial> {
+    private fun performMove(vials: List<Vial>, fromIndex: Int, toIndex: Int): List<Vial>? {
         val newVials = vials.toMutableList()
         val fromVial = newVials[fromIndex]
         val toVial = newVials[toIndex]
@@ -73,7 +76,7 @@ class WaterSortEngineImpl : WaterSortEngine {
         // Определяем сколько жидкости можно перелить
         val availableSpace = toVial.capacity - toVial.colors.size
         val movableLiquid = minOf(fromVial.topColorCount, availableSpace)
-        val colorToMove = fromVial.topColor!!
+        val colorToMove = fromVial.topColor ?: return null
 
         // Создаем новые колбы
         val newFromColors = fromVial.colors.dropLast(movableLiquid)

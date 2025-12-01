@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import com.defey.labpuzzles.extensions.toComposeColor
 import com.defey.labpuzzles.models.Vial
 import com.defey.labpuzzles.water_sort.calculations.calculateDeselectPosition
 import com.defey.labpuzzles.water_sort.calculations.calculateDeselectTransform
@@ -116,7 +117,7 @@ fun AnimatedVialOverlay(
             .clickable(onClick = onClick)
     ) {
         WaterSortVial(
-            colors = vial.colors,
+            colorsInt = vial.colors,
             capacity = vial.capacity,
             totalWidth = totalWidth,
             isSelected = true
@@ -129,7 +130,7 @@ fun AnimatedVialOverlay(
         DrawPouringStream(
             sourcePosition = currentPosition,
             targetPosition = targetPos,
-            color = animationState.color,
+            color = animationState.color.toComposeColor(),
             progress = animationState.progress,
             density = density,
             direction = animationState.direction

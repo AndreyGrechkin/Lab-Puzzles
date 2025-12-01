@@ -78,7 +78,7 @@ fun WaterSortGameField(
                 ) {
                     if (index != animatingIndex) {
                         WaterSortVial(
-                            colors = vial.colors,
+                            colorsInt = vial.colors,
                             capacity = vial.capacity,
                             totalWidth = totalWidth,
                             isSelected = selectedVialIndex == index && clicksEnabled,

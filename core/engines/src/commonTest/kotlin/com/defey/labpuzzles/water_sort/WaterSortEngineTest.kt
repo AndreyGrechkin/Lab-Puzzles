@@ -341,24 +341,6 @@ class WaterSortEngineTest {
         assertEquals(listOf(1, 1, 1), result.newState.vials[2].colors) // Получили два RED
     }
 
-//    @Test
-//    fun `move with invalid index should return error`() {
-//        // Arrange
-//        val initialState = WaterSortState(
-//            vials = listOf(
-//                createVial(listOf(1, 1)),
-//                createEmptyVial()
-//            )
-//        )
-//
-//        // Act
-//        val result = engine.makeMove(initialState, fromIndex = 5, toIndex = 0)
-//
-//        // Assert
-//        assertTrue(result is ErrorGameResult<*, *>)
-//        assertEquals(WaterSortError.INVALID_INDEX, (result as ErrorGameResult<*, *>).error)
-//    }
-
     @Test
     fun `complex win scenario should work correctly`() {
         // Arrange - сложный сценарий с несколькими цветами

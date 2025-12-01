@@ -16,6 +16,6 @@ val featuresUiModule = module {
     viewModel { AchievementsViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { GameHubViewModel(get(), get()) }
-    viewModel { WaterSortViewModel(get(), get(), get(), get()) }
+    viewModel { WaterSortViewModel(get(), get(), get(), get(), get()) }
     viewModel { ChaptersViewModel(get()) }
 }

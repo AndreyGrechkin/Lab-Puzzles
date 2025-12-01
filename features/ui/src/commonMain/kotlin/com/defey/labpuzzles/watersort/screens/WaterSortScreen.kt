@@ -70,7 +70,9 @@ fun WaterSortScreen() {
 
                 WaterSortControls(
                     onHint = {},
-                    onRestart = {},
+                    onRestart = {
+                        viewModel.onEvent(WaterSortUiContract.Event.OnRetry)
+                    },
                     onSkip = {},
                     onUndo = {},
                     modifier = Modifier.padding(top = 16.dp),
