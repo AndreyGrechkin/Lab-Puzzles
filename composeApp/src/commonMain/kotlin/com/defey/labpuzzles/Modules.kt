@@ -4,6 +4,7 @@ import com.defey.labpuzzles.di.commonModule
 import com.defey.labpuzzles.di.languageModule
 import com.defey.labpuzzles.di.navigationModule
 import com.defey.labpuzzles.di.featuresUiModule
+import com.defey.labpuzzles.di.flowFreeModule
 import com.defey.labpuzzles.di.storageModule
 import com.defey.labpuzzles.di.timerModule
 import com.defey.labpuzzles.di.waterSortEngineModule
@@ -16,7 +17,7 @@ private val coreModules
         navigationModule,
         timerModule,
         waterSortEngineModule,
-//        uiKitModule,
+        flowFreeModule,
         languageModule,
 //        commonAnalyticsModule,
 //        adsModule
