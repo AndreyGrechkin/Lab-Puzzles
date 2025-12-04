@@ -6,6 +6,7 @@ import com.defey.labpuzzles.base_viewModel.BaseViewModel
 import com.defey.labpuzzles.managers.timer.ForwardTimer
 import com.defey.labpuzzles.models.Difficulty
 import com.defey.labpuzzles.models.ErrorGameResult
+import com.defey.labpuzzles.models.Screen.Companion.ARGS_LEVEL_ID
 import com.defey.labpuzzles.models.SuccessGameResult
 import com.defey.labpuzzles.models.Vial
 import com.defey.labpuzzles.models.WaterSortState
@@ -39,7 +40,7 @@ class WaterSortViewModel(
 
     init {
 
-        val levelId = savedStateHandle.get<String>("levelId") ?: ""
+        val levelId = savedStateHandle.get<String>(ARGS_LEVEL_ID) ?: ""
         updateState {
             copy(levelId = levelId)
         }

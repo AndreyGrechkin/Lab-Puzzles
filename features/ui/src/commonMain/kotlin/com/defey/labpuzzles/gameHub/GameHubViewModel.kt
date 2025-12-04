@@ -8,6 +8,7 @@ import com.defey.labpuzzles.models.GameType
 import com.defey.labpuzzles.models.LevelBlock
 import com.defey.labpuzzles.models.LevelState
 import com.defey.labpuzzles.models.Screen
+import com.defey.labpuzzles.models.Screen.Companion.ARGS_CHAPTER
 
 class GameHubViewModel(
     savedStateHandle: SavedStateHandle,
@@ -18,7 +19,7 @@ class GameHubViewModel(
         GameHubUiContract.Action>(initialState = GameHubUiContract.State()) {
 
     init {
-        val chapterArg = savedStateHandle.get<String>("chapter") ?: ""
+        val chapterArg = savedStateHandle.get<String>(ARGS_CHAPTER) ?: ""
         val chapter = Chapter.valueOf(chapterArg)
         val list = generateLevelsForBlock(LevelBlock.BLOCK_1)
         updateState {
@@ -39,8 +40,15 @@ class GameHubViewModel(
                 navigationManager.navigate(Screen.ChaptersScreen)
             GameHubUiContract.Event.OnDailyQuestsClick -> println("Event: $event")
             GameHubUiContract.Event.OnSettingsClick -> println("Event: $event")
-            is GameHubUiContract.Event.OnLevelClick ->
-                navigationManager.navigate(Screen.WaterSortScreen.createRoute(event.levelId.toString()))
+            is GameHubUiContract.Event.OnLevelClick -> {
+                when(event.type) {
+                    GameType.WATER_SORT -> navigationManager.navigate(Screen.WaterSortScreen.createRoute(event.levelId.toString()))
+                    GameType.FLOW_FREE -> navigationManager.navigate(Screen.FlowFreeScreen.createRoute(event.levelId.toString()))
+                    GameType.SUDOKU -> navigationManager.navigate(Screen.FlowFreeScreen.createRoute(event.levelId.toString()))
+                    GameType.SLIDING_PUZZLE -> navigationManager.navigate(Screen.FlowFreeScreen.createRoute(event.levelId.toString()))
+                }
+            }
+
             GameHubUiContract.Event.OnNextBlockClick -> {
                 println("Event: $event")
                 val nextBlock = getNextBlock(state.value.currentBlock)
@@ -91,7 +99,6 @@ class GameHubViewModel(
                 levelId < 10 -> 1
                 else -> 0
             }
-            println("LEVEL: levelId ${levelId}")
             GameHubUiContract.LevelUI(
                 id = levelId,
                 gameType = getGameTypeForLevel(levelId),

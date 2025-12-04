@@ -6,8 +6,11 @@ import com.defey.labpuzzles.models.FlowFreeError
 import com.defey.labpuzzles.models.FlowFreePosition
 import com.defey.labpuzzles.models.FlowFreeState
 import com.defey.labpuzzles.models.GameResult
+import com.defey.labpuzzles.models.LineContinueResult
+import com.defey.labpuzzles.models.LineStartResult
 import com.defey.labpuzzles.models.SuccessGameResult
 import com.defey.labpuzzles.repository.FlowFreeEngine
+import kotlin.math.abs
 
 /**
  * РЕАЛИЗАЦИЯ ДВИЖКА FLOW FREE
@@ -20,261 +23,688 @@ import com.defey.labpuzzles.repository.FlowFreeEngine
  */
 class FlowFreeEngineImpl : FlowFreeEngine {
 
-    // ============================================
-    // ОСНОВНОЙ МЕТОД - ВЫПОЛНЕНИЕ ХОДА
-    // ============================================
-
-    override fun makeMove(
+    override fun startNewLine(
         state: FlowFreeState,
-        from: FlowFreePosition,
-        to: FlowFreePosition
-    ): GameResult<FlowFreeState> {
-        // 1. Проверяем базовую валидность позиций
-        val basicValidation = validateBasicMove(state, from, to)
-        if (basicValidation != null) {
-            return ErrorGameResult(state, basicValidation)
+        startPosition: FlowFreePosition
+    ): LineStartResult {
+
+        // 1. БАЗОВАЯ ВАЛИДАЦИЯ ПОЗИЦИИ
+        val positionError = validateBasicPosition(state, startPosition)
+        if (positionError != null) {
+            return LineStartResult.Error(positionError, startPosition)
         }
 
-        // 2. Проверяем что from - это либо точка, либо путь
-        val fromCell = state.getCell(from)
-        if (fromCell == null ||
-            (fromCell !is FlowFreeCell.Endpoint && fromCell !is FlowFreeCell.Path)) {
-            return ErrorGameResult(state, FlowFreeError.NOT_AN_ENDPOINT)
+        // 2. ПОЛУЧАЕМ ЯЧЕЙКУ
+        val startCell = getCell(state, startPosition)
+            ?: return LineStartResult.Error(FlowFreeError.INVALID_POSITION, startPosition)
+
+        // 3. ПРОВЕРЯЕМ ЧТО ЭТО ENDPOINT
+        if (startCell !is FlowFreeCell.Endpoint) {
+            return LineStartResult.Error(FlowFreeError.NOT_AN_ENDPOINT, startPosition)
         }
 
-        // 3. Проверяем что to - соседняя ячейка
-        if (!arePositionsAdjacent(from, to)) {
-            return ErrorGameResult(state, FlowFreeError.NOT_ADJACENT_CELL)
+        val lineColor = startCell.color
+
+        // 4. ПРОВЕРЯЕМ ЧТО ДЛЯ ЭТОГО ЦВЕТА ЕЩЕ НЕТ ЛИНИИ
+        if (hasLineForColor(state, lineColor)) {
+            return LineStartResult.Error(FlowFreeError.CELL_OCCUPIED, startPosition)
         }
 
-        // 4. Получаем цвет начальной ячейки
-        val fromColor = state.getCellColor(from)
-        if (fromColor == null) {
-            return ErrorGameResult(state, FlowFreeError.INVALID_POSITION)
+        // 5. ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ - ВОЗВРАЩАЕМ УСПЕХ
+        return LineStartResult.Success(
+            lineColor = lineColor,
+            startPosition = startPosition
+        )
+    }
+
+    override fun continueLine(
+        state: FlowFreeState,
+        currentPath: List<FlowFreePosition>,
+        newPosition: FlowFreePosition
+    ): LineContinueResult {
+        // 1. ВАЛИДАЦИЯ ВХОДНЫХ ДАННЫХ
+        if (currentPath.isEmpty()) {
+            return LineContinueResult.Error(
+                error = FlowFreeError.INVALID_POSITION,
+                position = newPosition
+            )
         }
 
-        // 5. Если from - это Path, проверяем что мы продолжаем линию, а не отходим от нее
-        if (fromCell is FlowFreeCell.Path) {
-            if (!isContinuingLine(state, from, to, fromColor)) {
-                return ErrorGameResult(state, FlowFreeError.BREAKING_LINE)
-            }
-        }
-        // Если from - это Endpoint, пропускаем эту проверку
-
-        // 6. Проверяем целевую ячейку
-        val toCell = state.getCell(to)
-        val toValidation = validateTargetCell(toCell, fromColor)
-        if (toValidation != null) {
-            return ErrorGameResult(state, toValidation)
+        // 2. БАЗОВАЯ ВАЛИДАЦИЯ НОВОЙ ПОЗИЦИИ
+        val positionError = validateBasicPosition(state, newPosition)
+        if (positionError != null) {
+            return LineContinueResult.Error(positionError, newPosition)
         }
 
-        // 7. Создаем новое состояние с выполненным ходом
-        val newGrid = applyMoveToGrid(state.grid, from, to, fromColor)
-        val newState = state.copy(
-            grid = newGrid,
-            movesCount = state.movesCount + 1
+        // 3. ПОЛУЧАЕМ ЦВЕТ ЛИНИИ ИЗ ПЕРВОЙ ТОЧКИ
+        val lineColor = getPathColor(state, currentPath) ?: return LineContinueResult.Error(
+            error = FlowFreeError.INVALID_POSITION,
+            position = newPosition
         )
 
-        // 8. Проверяем условие победы
+        // 4. ПРОВЕРЯЕМ ЧТО НОВАЯ ПОЗИЦИЯ ЕЩЕ НЕ В ПУТИ (кроме backtrack)
+        if (currentPath.contains(newPosition)) {
+            // Это backtrack - допустимо, но нужно специальная обработка
+            return handleBacktrack(currentPath, newPosition)
+        }
+
+        // 5. ПОЛУЧАЕМ ПОСЛЕДНЮЮ ПОЗИЦИЮ ПУТИ
+        val lastPosition = currentPath.last()
+
+        // 6. ПРОВЕРЯЕМ СОСЕДСТВО С ПОСЛЕДНЕЙ ПОЗИЦИЕЙ
+        if (!arePositionsAdjacent(lastPosition, newPosition)) {
+            return LineContinueResult.Error(
+                error = FlowFreeError.NOT_ADJACENT_CELL,
+                position = newPosition
+            )
+        }
+
+        // 7. ПРОВЕРЯЕМ ЯЧЕЙКУ (цвет, занятость)
+        val cellValidation = validateCellForLine(
+            state = state,
+            position = newPosition,
+            lineColor = lineColor
+        )
+
+        if (cellValidation != null) {
+            return LineContinueResult.Error(cellValidation, newPosition)
+        }
+
+        // 8. ПРОВЕРЯЕМ ПРАВИЛА ЛИНИЙ (не пересечение, не разрыв)
+        val lineValidation = validateLineRules(
+            state = state,
+            currentPath = currentPath,
+            newPosition = newPosition,
+            lineColor = lineColor
+        )
+
+        if (lineValidation != null) {
+            return LineContinueResult.Error(lineValidation, newPosition)
+        }
+
+        // 9. ФОРМИРУЕМ НОВЫЙ ПУТЬ
+        val newPath = currentPath + newPosition
+
+        // 10. ПРОВЕРЯЕМ ДОСТИГЛИ ЛИ ВТОРОЙ ТОЧКИ
+        val reachedEndpoint = checkIfReachedEndpoint(
+            state = state,
+            position = newPosition,
+            lineColor = lineColor
+        )
+
+        // 11. ВОЗВРАЩАЕМ УСПЕШНЫЙ РЕЗУЛЬТАТ
+        return LineContinueResult.Success(
+            newPath = newPath,
+            reachedEndpoint = reachedEndpoint
+        )
+    }
+
+    override fun completeLine(
+        state: FlowFreeState,
+        path: List<FlowFreePosition>
+    ): GameResult<FlowFreeState> {
+        // 1. ВАЛИДАЦИЯ ПУТИ
+        if (path.size < 2) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.INVALID_POSITION
+            )
+        }
+
+        // 2. ПОЛУЧАЕМ ЦВЕТ ЛИНИИ ИЗ ПЕРВОЙ ТОЧКИ
+        val lineColor = getPathColor(state, path) ?: return ErrorGameResult(
+            newState = state,
+            error = FlowFreeError.INVALID_POSITION
+        )
+
+        // 3. ПРОВЕРЯЕМ ЧТО ПЕРВАЯ ТОЧКА - ENDPOINT
+        val startCell = getCell(state, path.first())
+        if (startCell !is FlowFreeCell.Endpoint) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.NOT_AN_ENDPOINT
+            )
+        }
+
+        // 4. ПРОВЕРЯЕМ ЧТО ПОСЛЕДНЯЯ ТОЧКА - ENDPOINT
+        val endCell = getCell(state, path.last())
+        if (endCell !is FlowFreeCell.Endpoint) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.NOT_AN_ENDPOINT
+            )
+        }
+
+        // 5. ПРОВЕРЯЕМ ЧТО ОБЕ ТОЧКИ ОДНОГО ЦВЕТА
+        if (startCell.color != endCell.color || startCell.color != lineColor) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.WRONG_COLOR_CONNECTION
+            )
+        }
+
+        // 6. ПРОВЕРЯЕМ ЧТО ДЛЯ ЭТОГО ЦВЕТА ЕЩЕ НЕТ ЛИНИИ
+        if (hasLineForColor(state, lineColor)) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.CELL_OCCUPIED
+            )
+        }
+
+        // 7. ПОШАГОВАЯ ПРОВЕРКА ВСЕГО ПУТИ
+        val pathValidation = validateCompletePath(state, path, lineColor)
+        if (pathValidation != null) {
+            return ErrorGameResult(
+                newState = state,
+                error = pathValidation
+            )
+        }
+
+        // 8. ПРИМЕНЯЕМ ПУТЬ К GRID
+        val newGrid = applyPathToGrid(state.grid, path, lineColor)
+
+        val tempState = state.copy(
+            grid = newGrid,
+            movesCount = state.movesCount + 1,
+            activeLine = null  // очищаем активную линию
+        )
+
+        // 9. ВЫЧИСЛЯЕМ ПРОГРЕСС
+        val newProgress = calculateProgress(tempState)
+
+        // 10. СОЗДАЕМ ФИНАЛЬНОЕ СОСТОЯНИЕ
+        val newState = tempState.copy(
+            progress = newProgress
+        )
+
+        // 10. ПРОВЕРЯЕМ УСЛОВИЕ ПОБЕДЫ
         val isWin = checkWinCondition(newState)
 
+        // 11. ВОЗВРАЩАЕМ РЕЗУЛЬТАТ
         return SuccessGameResult(
             newState = newState.copy(isCompleted = isWin),
             isWin = isWin
         )
     }
 
-    // ============================================
-    // УДАЛЕНИЕ ЛИНИИ
-    // ============================================
-
-    override fun clearLine(
+    override fun removeLine(
         state: FlowFreeState,
         color: Int
     ): GameResult<FlowFreeState> {
-        // 1. Создаем копию сетки
-        val newGrid = state.grid.map { row ->
-            row.map { cell ->
-                when (cell) {
-                    is FlowFreeCell.Path -> {
-                        // Удаляем пути этого цвета
-                        if (cell.color == color) {
-                            FlowFreeCell.Empty
-                        } else {
-                            cell
-                        }
-                    }
-                    // Точки и пустые ячейки остаются без изменений
-                    else -> cell
-                }
-            }
+        // 1. ПРОВЕРЯЕМ ЧТО ЦВЕТ ВАЛИДЕН
+        if (color == -1) {
+            return ErrorGameResult(
+                newState = state,
+                error = FlowFreeError.INVALID_POSITION
+            )
         }
 
-        val newState = state.copy(grid = newGrid)
+        // 2. ПРОВЕРЯЕМ ЧТО ДЛЯ ЭТОГО ЦВЕТА ЕСТЬ ЛИНИЯ
+        if (!hasLineForColor(state, color)) {
+            // Возвращаем успех с тем же состоянием (ничего не удаляем)
+            return SuccessGameResult(
+                newState = state,
+                isWin = false
+            )
+        }
 
+        // 3. ПОЛУЧАЕМ ENDPOINT ЭТОГО ЦВЕТА (чтобы не удалить их)
+        val endpoints = getEndpointsByColor(state)[color] ?: emptyList()
+
+        // 4. СОЗДАЕМ НОВЫЙ GRID БЕЗ PATH ЭТОГО ЦВЕТА
+        val newGrid = removeColorFromGrid(state.grid, color, endpoints)
+
+        // 4. СОЗДАЕМ ВРЕМЕННОЕ СОСТОЯНИЕ С НОВЫМ GRID
+        val tempState = state.copy(
+            grid = newGrid
+        )
+
+        // 5. ВЫЧИСЛЯЕМ ПРОГРЕСС
+        val newProgress = calculateProgress(tempState)
+
+        // 6. СОЗДАЕМ ФИНАЛЬНОЕ СОСТОЯНИЕ
+        val newState = tempState.copy(
+            progress = newProgress
+        )
+
+        // 6. ПРОВЕРЯЕМ УСЛОВИЕ ПОБЕДЫ (после удаления оно точно false)
+        // Но проверяем для полноты
+        val isWin = checkWinCondition(newState)
+
+        // 7. ВОЗВРАЩАЕМ РЕЗУЛЬТАТ
         return SuccessGameResult(
-            newState = newState,
-            isWin = checkWinCondition(newState)
+            newState = newState.copy(isCompleted = isWin),
+            isWin = isWin
         )
     }
 
-    // ============================================
-    // ПРОВЕРКА ПОБЕДЫ
-    // ============================================
-
     override fun checkWinCondition(state: FlowFreeState): Boolean {
-        // 1. Проверяем что все ячейки заполнены
+
+        // 1. БЫСТРАЯ ПРОВЕРКА: ВСЕ ЯЧЕЙКИ ЗАПОЛНЕНЫ?
         val allCellsFilled = state.grid.all { row ->
             row.all { cell ->
                 cell !is FlowFreeCell.Empty
             }
         }
 
-        if (!allCellsFilled) {
-            return false
+        if (!allCellsFilled) return false
+
+        // 2. ПОЛУЧАЕМ ВСЕ ENDPOINT С ГРУППИРОВКОЙ ПО ЦВЕТУ
+        val endpointsByColor = getEndpointsByColor(state)
+
+        // 3. ПРОВЕРЯЕМ ЧТО У КАЖДОГО ЦВЕТА РОВНО 2 ENDPOINT
+        val hasValidEndpoints = endpointsByColor.all { (_, endpoints) ->
+            val isValid = endpoints.size == 2
+            isValid
         }
 
-        // 2. Находим все точки (Endpoints)
-        val endpoints = mutableListOf<Pair<FlowFreePosition, Int>>()
-        for (row in 0 until state.rows) {
-            for (col in 0 until state.cols) {
-                val cell = state.grid[row][col]
-                if (cell is FlowFreeCell.Endpoint) {
-                    endpoints.add(FlowFreePosition(row, col) to cell.color)
-                }
-            }
+        if (!hasValidEndpoints) return false
+
+        // 4. ДЛЯ КАЖДОГО ЦВЕТА ПРОВЕРЯЕМ СОЕДИНЕНИЕ ENDPOINT
+        val allEndpointsConnected = endpointsByColor.all { (color, endpoints) ->
+            val point1 = endpoints[0]
+            val point2 = endpoints[1]
+            val areConnected = areEndpointsConnected(state, point1, point2, color)
+            areConnected
         }
 
-        // 3. Группируем точки по цветам
-        val endpointsByColor = endpoints.groupBy({ it.second }, { it.first })
+        if (!allEndpointsConnected) return false
 
-        // 4. Для каждого цвета проверяем что его точки соединены
-        return endpointsByColor.all { (color, colorEndpoints) ->
-            // Должно быть ровно 2 точки каждого цвета
-            if (colorEndpoints.size != 2) {
-                return false
-            }
-
-            val (point1, point2) = colorEndpoints
-            arePointsConnected(state, point1, point2, color)
-        }
+        // 5. ПРОВЕРКА НА ПЕРЕСЕЧЕНИЕ ЛИНИЙ (опционально, но важно)
+        val hasLineIntersections = checkForLineIntersections(state)
+        // 6. ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ - ПОБЕДА!
+        return !hasLineIntersections
     }
 
-    // ============================================
-    // ПРОВЕРКА ВАЛИДНОСТИ ХОДА (для UI)
-    // ============================================
-
-    override fun isValidMove(
+    override fun isValidPosition(
         state: FlowFreeState,
-        from: FlowFreePosition,
-        to: FlowFreePosition
+        position: FlowFreePosition
     ): Boolean {
-        // Используем ту же логику что и в makeMove, но без создания нового состояния
-        return validateBasicMove(state, from, to) == FlowFreeError.INVALID_POSITION &&
-                state.isEndpoint(from) &&
-                arePositionsAdjacent(from, to) &&
-                validateTargetCell(state.getCell(to), state.getCellColor(from) ?: -1) == FlowFreeError.INVALID_POSITION &&
-                !isContinuingLine(state, from, to, state.getCellColor(from) ?: -1)
+        return validateBasicPosition(state, position) == null
     }
 
-    // ============================================
-    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
-    // ============================================
-
-    /**
-     * БАЗОВАЯ ВАЛИДАЦИЯ ХОДА
-     */
-     private fun validateBasicMove(
-        state: FlowFreeState,
-        from: FlowFreePosition,
-        to: FlowFreePosition
-    ): FlowFreeError? { // Возвращаем null при успехе или ошибку
-        // Проверяем что позиции в пределах поля
-        if (!state.isValidPosition(from) || !state.isValidPosition(to)) {
-            return FlowFreeError.INVALID_POSITION
-        }
-
-        // Проверяем что это не одна и та же ячейка
-        if (from == to) {
-            return FlowFreeError.INVALID_POSITION
-        }
-
-        return null // Успешная базовая валидация
-    }
-
-    /**
-     * ПРОВЕРКА СОСЕДСТВА ЯЧЕЕК
-     */
-    fun arePositionsAdjacent(
+    override fun arePositionsAdjacent(
         pos1: FlowFreePosition,
         pos2: FlowFreePosition
     ): Boolean {
-        val rowDiff = kotlin.math.abs(pos1.row - pos2.row)
-        val colDiff = kotlin.math.abs(pos1.col - pos2.col)
-
-        // Соседние по вертикали или горизонтали (не по диагонали)
+        val rowDiff = abs(pos1.row - pos2.row)
+        val colDiff = abs(pos1.col - pos2.col)
         return (rowDiff == 1 && colDiff == 0) || (rowDiff == 0 && colDiff == 1)
     }
 
+    override fun getCellColor(
+        state: FlowFreeState,
+        position: FlowFreePosition
+    ): Int? {
+        return getCell(state, position)?.color
+    }
+
+    override fun applyPathToGrid(
+        grid: List<List<FlowFreeCell>>,
+        path: List<FlowFreePosition>,
+        color: Int
+    ): List<List<FlowFreeCell>> {
+        // Создаем mutable копию для преобразования
+        val newGrid = grid.map { it.toMutableList() }
+
+        // Применяем путь к grid
+        for (position in path) {
+            val currentCell = grid[position.row][position.col]
+            // Если это уже Endpoint - оставляем как Endpoint
+            // Иначе создаем Path
+            newGrid[position.row][position.col] = when (currentCell) {
+                is FlowFreeCell.Endpoint -> currentCell
+                else -> FlowFreeCell.Path(color)
+            }
+        }
+
+        return newGrid.map { it.toList() }
+    }
+
     /**
-     * ПРОВЕРКА ЦЕЛЕВОЙ ЯЧЕЙКИ
+     * ПРОВЕРИТЬ БАЗОВУЮ ВАЛИДНОСТЬ ПОЗИЦИИ
+     *
+     * @param state Текущее состояние
+     * @param position Позиция для проверки
+     * @return null если позиция валидна, иначе ошибка
      */
-    private fun validateTargetCell(
-        cell: FlowFreeCell?,
-        fromColor: Int
+    private fun validateBasicPosition(
+        state: FlowFreeState,
+        position: FlowFreePosition
     ): FlowFreeError? {
-        return when (cell) {
-            null -> FlowFreeError.INVALID_POSITION
-            is FlowFreeCell.Endpoint -> {
-                if (cell.color == fromColor) {
-                    null // Успех
-                } else {
-                    // Точка другого цвета - ячейка занята
-                    FlowFreeError.CELL_OCCUPIED
-                }
-            }
-            is FlowFreeCell.Path -> {
-                if (cell.color == fromColor) {
-                    null // Успех
-                } else {
-                    FlowFreeError.CELL_OCCUPIED
-                }
-            }
-            FlowFreeCell.Empty -> null // Успех
+        return when {
+            // Позиция вне сетки
+            position.row !in 0 until state.grid.size -> FlowFreeError.INVALID_POSITION
+            position.col !in 0 until state.grid[0].size -> FlowFreeError.INVALID_POSITION
+            else -> null
         }
     }
 
     /**
-     * ПРИМЕНЕНИЕ ХОДА К СЕТКЕ
+     * ПРОВЕРИТЬ ЯВЛЯЕТСЯ ЛИ ЯЧЕЙКА PATH
      */
-    private fun applyMoveToGrid(
+    private fun isPath(
+        state: FlowFreeState,
+        position: FlowFreePosition
+    ): Boolean {
+        val cell = state.grid.getOrNull(position.row)
+            ?.getOrNull(position.col)
+        return cell is FlowFreeCell.Path
+    }
+
+    /**
+     * ПОЛУЧИТЬ ЯЧЕЙКУ ПО ПОЗИЦИИ
+     */
+    private fun getCell(
+        state: FlowFreeState,
+        position: FlowFreePosition
+    ): FlowFreeCell? {
+        return state.grid.getOrNull(position.row)
+            ?.getOrNull(position.col)
+    }
+
+    /**
+     * ПРОВЕРИТЬ ЕСТЬ ЛИ УЖЕ ЛИНИЯ ДЛЯ ЦВЕТА
+     *
+     * Линия считается существующей если есть хотя бы одна Path ячейка этого цвета
+     */
+    override fun hasLineForColor(
+        state: FlowFreeState,
+        color: Int
+    ): Boolean {
+        return state.grid.any { row ->
+            row.any { cell ->
+                cell is FlowFreeCell.Path && cell.color == color
+            }
+        }
+    }
+
+    /**
+     * ПОЛУЧИТЬ ЦВЕТ ПУТИ ИЗ ПЕРВОЙ ЯЧЕЙКИ
+     */
+    private fun getPathColor(
+        state: FlowFreeState,
+        path: List<FlowFreePosition>
+    ): Int? {
+        if (path.isEmpty()) return null
+        val firstCell = getCell(state, path.first())
+        return firstCell?.color
+    }
+
+    /**
+     * ОБРАБОТКА BACKTRACK (возврат по линии)
+     */
+    private fun handleBacktrack(
+        currentPath: List<FlowFreePosition>,
+        backtrackPosition: FlowFreePosition,
+    ): LineContinueResult {
+        val index = currentPath.indexOf(backtrackPosition)
+        if (index < 0) {
+            // Не должно случиться, но для безопасности
+            return LineContinueResult.Error(
+                error = FlowFreeError.INVALID_POSITION,
+                position = backtrackPosition
+            )
+        }
+
+        // Удаляем все позиции после backtrackPosition
+        val newPath = currentPath.take(index + 1)
+        return LineContinueResult.Success(newPath = newPath)
+    }
+
+    /**
+     * ПРОВЕРКА ЯЧЕЙКИ ДЛЯ ДОБАВЛЕНИЯ В ЛИНИЮ
+     */
+    private fun validateCellForLine(
+        state: FlowFreeState,
+        position: FlowFreePosition,
+        lineColor: Int,
+    ): FlowFreeError? {
+        val cell = getCell(state, position) ?: return FlowFreeError.INVALID_POSITION
+
+        return when (cell) {
+            // Пустая ячейка - можно
+            is FlowFreeCell.Empty -> null
+
+            // Endpoint того же цвета - можно (завершение линии)
+            is FlowFreeCell.Endpoint -> {
+                if (cell.color == lineColor) null
+                else FlowFreeError.WRONG_COLOR_CONNECTION
+            }
+
+            // Path того же цвета - можно (продолжение существующей линии)
+            is FlowFreeCell.Path -> {
+                if (cell.color == lineColor) null
+                else FlowFreeError.CELL_OCCUPIED
+            }
+        }
+    }
+
+    /**
+     * ПРОВЕРКА ПРАВИЛ ЛИНИЙ (не пересечение, не разрыв)
+     */
+    private fun validateLineRules(
+        state: FlowFreeState,
+        currentPath: List<FlowFreePosition>,
+        newPosition: FlowFreePosition,
+        lineColor: Int
+    ): FlowFreeError? {
+        // Правило 1: Нельзя проходить через другие Endpoint
+        val cell = getCell(state, newPosition)
+        if (cell is FlowFreeCell.Endpoint && cell.color != lineColor) {
+            return FlowFreeError.CROSSING_ENDPOINT
+        }
+
+        // Правило 2: Проверка на пересечение линий
+        // (проверяем соседей новой позиции кроме последней в пути)
+        val lastPosition = currentPath.last()
+        val neighbors = getAdjacentPositions(newPosition)
+
+        for (neighbor in neighbors) {
+            if (neighbor == lastPosition) continue // это откуда пришли
+
+            val neighborCell = getCell(state, neighbor)
+            if (neighborCell is FlowFreeCell.Path && neighborCell.color != lineColor) {
+                // Есть соседняя ячейка другого цвета - возможное пересечение
+                if (isPath(state, newPosition) || isPath(state, lastPosition)) {
+                    return FlowFreeError.CROSSING_LINES
+                }
+            }
+        }
+
+        // Правило 3: Если текущая ячейка уже Path, проверяем что не разрываем линию
+        if (isPath(state, newPosition)) {
+            return validateNotBreakingLine(state, newPosition, lineColor)
+        }
+
+        return null
+    }
+
+    /**
+     * ПРОВЕРКА ЧТО НЕ РАЗРЫВАЕМ СУЩЕСТВУЮЩУЮ ЛИНИЮ
+     */
+    private fun validateNotBreakingLine(
+        state: FlowFreeState,
+        position: FlowFreePosition,
+        lineColor: Int
+    ): FlowFreeError? {
+        // Получаем всех соседей этого цвета
+        val sameColorNeighbors = getAdjacentPositions(position)
+            .filter { neighbor ->
+                val cell = getCell(state, neighbor)
+                cell?.color == lineColor
+            }
+
+        // Если у Path ячейки больше 2 соседей того же цвета - это пересечение
+        if (sameColorNeighbors.size > 2) {
+            return FlowFreeError.CROSSING_LINES
+        }
+
+        return null
+    }
+
+    /**
+     * ПОЛУЧЕНИЕ СОСЕДНИХ ПОЗИЦИЙ
+     */
+    private fun getAdjacentPositions(position: FlowFreePosition): List<FlowFreePosition> {
+        return listOf(
+            FlowFreePosition(position.row - 1, position.col), // вверх
+            FlowFreePosition(position.row + 1, position.col), // вниз
+            FlowFreePosition(position.row, position.col - 1), // влево
+            FlowFreePosition(position.row, position.col + 1)  // вправо
+        )
+    }
+
+    /**
+     * ПРОВЕРКА ДОСТИГЛИ ЛИ ВТОРОЙ ТОЧКИ
+     */
+    private fun checkIfReachedEndpoint(
+        state: FlowFreeState,
+        position: FlowFreePosition,
+        lineColor: Int
+    ): Boolean {
+        val cell = getCell(state, position)
+        return cell is FlowFreeCell.Endpoint && cell.color == lineColor
+    }
+
+    /**
+     * ПОШАГОВАЯ ПРОВЕРКА ВСЕГО ПУТИ
+     */
+    private fun validateCompletePath(
+        state: FlowFreeState,
+        path: List<FlowFreePosition>,
+        lineColor: Int
+    ): FlowFreeError? {
+        // Временная копия grid для пошаговой проверки
+        var tempGrid = state.grid
+
+        for (i in 0 until path.size - 1) {
+            val from = path[i]
+            val to = path[i + 1]
+
+            // Проверка соседства
+            if (!arePositionsAdjacent(from, to)) {
+                return FlowFreeError.NOT_ADJACENT_CELL
+            }
+
+            // Проверка ячейки 'to' в исходном состоянии
+            val validationError = when (val originalCell = getCell(state, to)) {
+                // Пустая ячейка - можно
+                is FlowFreeCell.Empty -> null
+
+                // Endpoint того же цвета - можно (но только на последнем шаге)
+                is FlowFreeCell.Endpoint -> {
+                    if (i == path.size - 2 && originalCell.color == lineColor) {
+                        null // Это последний шаг к конечной точке
+                    } else {
+                        FlowFreeError.CROSSING_ENDPOINT
+                    }
+                }
+
+                // Path или Endpoint другого цвета - нельзя
+                else -> FlowFreeError.CELL_OCCUPIED
+            }
+
+            if (validationError != null) return validationError
+
+            // Обновляем tempGrid (имитируем применение шага)
+            tempGrid = applyStepToGrid(tempGrid, to, lineColor)
+        }
+
+        // Дополнительная проверка: путь не должен пересекать сам себя
+        if (hasSelfIntersection(path)) return FlowFreeError.CROSSING_LINES
+
+        return null
+    }
+
+    /**
+     * ПРИМЕНЕНИЕ ОДНОГО ШАГА К GRID
+     */
+    private fun applyStepToGrid(
         grid: List<List<FlowFreeCell>>,
-        from: FlowFreePosition,
         to: FlowFreePosition,
         color: Int
     ): List<List<FlowFreeCell>> {
+        val newGrid = grid.map { it.toMutableList() }
+
+        // Ячейка 'from' уже должна быть обработана на предыдущем шаге
+        // Обрабатываем ячейку 'to'
+        val toCell = grid[to.row][to.col]
+        newGrid[to.row][to.col] = when (toCell) {
+            is FlowFreeCell.Endpoint -> toCell // Оставляем как Endpoint
+            else -> FlowFreeCell.Path(color)   // Делаем Path
+        }
+
+        return newGrid.map { it.toList() }
+    }
+
+    /**
+     * ПРОВЕРКА НА САМОПЕРЕСЕЧЕНИЕ ПУТИ
+     */
+    private fun hasSelfIntersection(path: List<FlowFreePosition>): Boolean {
+        // Используем Set для обнаружения дубликатов
+        val visited = mutableSetOf<FlowFreePosition>()
+
+        for (position in path) {
+            // Пропускаем первую и последнюю точки (они могут быть одинаковыми
+            // только если это одна и та же Endpoint, что невозможно)
+            if (position == path.first() || position == path.last()) {
+                continue
+            }
+
+            if (position in visited) return true // Нашли пересечение
+            visited.add(position)
+        }
+
+        return false
+    }
+
+    /**
+     * ПОЛУЧИТЬ ПАРЫ ENDPOINT ДЛЯ КАЖДОГО ЦВЕТА
+     */
+    private fun getEndpointsByColor(state: FlowFreeState): Map<Int, List<FlowFreePosition>> {
+        val endpoints = mutableMapOf<Int, MutableList<FlowFreePosition>>()
+
+        for (row in state.grid.indices) {
+            for (col in state.grid[row].indices) {
+                val cell = state.grid[row][col]
+                if (cell is FlowFreeCell.Endpoint) {
+                    val color = cell.color
+                    val list = endpoints.getOrPut(color) { mutableListOf() }
+                    list.add(FlowFreePosition(row, col))
+                }
+            }
+        }
+
+        return endpoints
+    }
+
+    /**
+     * УДАЛИТЬ ЦВЕТ ИЗ GRID
+     *
+     * @param grid Исходный grid
+     * @param color Цвет для удаления
+     * @param endpointsToKeep Endpoint этого цвета (не удалять)
+     * @return Новый grid без Path указанного цвета
+     */
+    private fun removeColorFromGrid(
+        grid: List<List<FlowFreeCell>>,
+        color: Int,
+        endpointsToKeep: List<FlowFreePosition>
+    ): List<List<FlowFreeCell>> {
         return grid.mapIndexed { rowIndex, row ->
             row.mapIndexed { colIndex, cell ->
-                val currentPos = FlowFreePosition(rowIndex, colIndex)
-
+                val position = FlowFreePosition(rowIndex, colIndex)
                 when {
-                    // Целевая ячейка становится путем
-                    currentPos == to -> {
-                        val targetCell = grid[to.row][to.col]
-                        when (targetCell) {
-                            // Если это точка - оставляем точкой
-                            is FlowFreeCell.Endpoint -> targetCell
-                            // Иначе делаем путем
-                            else -> FlowFreeCell.Path(color)
-                        }
+                    // Endpoint этого цвета - оставляем
+                    position in endpointsToKeep -> cell
+
+                    // Path этого цвета - заменяем на Empty
+                    cell is FlowFreeCell.Path && cell.color == color -> {
+                        FlowFreeCell.Empty
                     }
 
-                    // Начальная ячейка (если это была точка - остается точкой)
-                    currentPos == from -> {
-                        cell // Оставляем как есть (Endpoint или Path)
-                    }
-
-                    // Все остальные ячейки без изменений
+                    // Все остальное - оставляем как есть
                     else -> cell
                 }
             }
@@ -282,114 +712,171 @@ class FlowFreeEngineImpl : FlowFreeEngine {
     }
 
     /**
-     * ПРОВЕРКА СОЕДИНЕНИЯ ТОЧЕК
+     * ПРОВЕРИТЬ СОЕДИНЕНЫ ЛИ ДВЕ ТОЧКИ
+     * Использует BFS для поиска пути между точками
      */
-    private fun arePointsConnected(
+    private fun areEndpointsConnected(
         state: FlowFreeState,
         point1: FlowFreePosition,
         point2: FlowFreePosition,
         color: Int
     ): Boolean {
+        // Если это одна и та же точка (не должно быть)
+        if (point1 == point2) return false
+
         val visited = mutableSetOf<FlowFreePosition>()
         val queue = ArrayDeque<FlowFreePosition>()
 
+        // Начинаем с первой точки
         queue.add(point1)
         visited.add(point1)
 
         while (queue.isNotEmpty()) {
             val current = queue.removeFirst()
 
-            // Если дошли до второй точки - соединены
-            if (current == point2) {
-                return true
-            }
+            // Если дошли до второй точки - соединены!
+            if (current == point2) return true
 
-            val neighbors = listOf(
-                FlowFreePosition(current.row - 1, current.col),
-                FlowFreePosition(current.row + 1, current.col),
-                FlowFreePosition(current.row, current.col - 1),
-                FlowFreePosition(current.row, current.col + 1)
-            )
+            // Ищем соседей того же цвета
+            val neighbors = getAdjacentPositions(current)
+                .filter { neighbor ->
+                    // Позиция в пределах сетки
+                    val row = neighbor.row
+                    val col = neighbor.col
+                    row in 0 until state.grid.size &&
+                            col in 0 until state.grid[0].size
+                }
+                .filter { neighbor ->
+                    // Ячейка того же цвета (Path или Endpoint)
+                    val cell = state.grid[neighbor.row][neighbor.col]
+                    cell.color == color
+                }
+                .filter { neighbor ->
+                    // Еще не посещали
+                    neighbor !in visited
+                }
 
             for (neighbor in neighbors) {
-                if (state.isValidPosition(neighbor) &&
-                    neighbor !in visited) {
+                visited.add(neighbor)
+                queue.add(neighbor)
+            }
+        }
+        // Не нашли путь до второй точки
+        return false
+    }
 
-                    val cell = state.getCell(neighbor)
-                    val cellColor = state.getCellColor(neighbor)
+    /**
+     * ПРОВЕРИТЬ НА ПЕРЕСЕЧЕНИЕ ЛИНИЙ
+     * Пересечение = Path ячейка имеет больше 2 соседей того же цвета
+     */
+    private fun checkForLineIntersections(state: FlowFreeState): Boolean {
+        for (row in state.grid.indices) {
+            for (col in state.grid[row].indices) {
+                val cell = state.grid[row][col]
 
-                    // Можно переходить:
-                    // 1. К целевой точке point2 (даже если это Endpoint)
-                    // 2. К Path того же цвета
-                    // 3. НЕ к другим Endpoint!
+                if (cell is FlowFreeCell.Path) {
+                    val position = FlowFreePosition(row, col)
+                    val sameColorNeighbors = getAdjacentPositions(position)
+                        .filter { neighbor ->
+                            val (nRow, nCol) = neighbor
+                            nRow in 0 until state.grid.size &&
+                                    nCol in 0 until state.grid[0].size
+                        }
+                        .count { neighbor ->
+                            val neighborCell = state.grid[neighbor.row][neighbor.col]
+                            neighborCell.color == cell.color
+                        }
 
-                    if (neighbor == point2 && cellColor == color) {
-                        // Это целевая точка - можно идти
-                        visited.add(neighbor)
-                        queue.add(neighbor)
-                    } else if (cell is FlowFreeCell.Path && cellColor == color) {
-                        // Это путь того же цвета - можно идти
-                        visited.add(neighbor)
-                        queue.add(neighbor)
-                    }
-                    // Endpoint (кроме целевой) - нельзя проходить через них!
+                    // Path ячейка может иметь максимум 2 соседа того же цвета
+                    // (вход и выход линии). Если больше - это пересечение.
+                    if (sameColorNeighbors > 2) return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * ВЫЧИСЛИТЬ ОБЩИЙ ПРОГРЕСС ИГРЫ
+     *
+     * 💡 ФОРМУЛА:
+     * Прогресс = Σ(длина_завершенного_пути_цвета) / общее_количество_ячеек × 100%
+     *
+     * Где длина пути включает:
+     * - 2 Endpoint точки (всегда)
+     * - Все Path ячейки этого цвета
+     *
+     * @param state Текущее состояние игры
+     * @return Прогресс от 0 до 100
+     */
+    fun calculateProgress(state: FlowFreeState): Int {
+        val totalCells = state.grid.size * state.grid[0].size
+
+        // Получаем все завершенные пути с их длинами
+        val completedPathLengths = getCompletedPathLengths(state)
+        val totalCompletedLength = completedPathLengths.values.sum()
+
+        return if (totalCells > 0) {
+            (totalCompletedLength * 100 / totalCells).coerceIn(0..100)
+        } else {
+            0
+        }
+    }
+
+    /**
+     * ПОЛУЧИТЬ ДЛИНЫ ВСЕХ ЗАВЕРШЕННЫХ ПУТЕЙ
+     *
+     * @param state Текущее состояние
+     * @return Map<цвет, длина_пути> для всех завершенных цветов
+     */
+    private fun getCompletedPathLengths(state: FlowFreeState): Map<Int, Int> {
+        val result = mutableMapOf<Int, Int>()
+
+        // Группируем Endpoint по цветам
+        val endpointsByColor = getEndpointsByColor(state)
+
+        // Для каждого цвета проверяем завершен ли путь
+        for ((color, endpoints) in endpointsByColor) {
+            if (endpoints.size == 2 && areEndpointsConnected(
+                    state,
+                    endpoints[0],
+                    endpoints[1],
+                    color
+                )
+            ) {
+                // Вычисляем длину пути (включая оба Endpoint)
+                val pathLength = calculatePathLengthForColor(state, color)
+                result[color] = pathLength
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * ВЫЧИСЛИТЬ ДЛИНУ ПУТИ ДЛЯ ЦВЕТА
+     *
+     * 💡 СЧИТАЕТ:
+     * - 2 Endpoint точки (всегда для завершенного пути)
+     * - Все Path ячейки этого цвета
+     *
+     * @param state Текущее состояние
+     * @param color Цвет для расчета
+     * @return Общее количество ячеек этого цвета в grid
+     */
+    private fun calculatePathLengthForColor(state: FlowFreeState, color: Int): Int {
+        var count = 0
+
+        for (row in state.grid) {
+            for (cell in row) {
+                when (cell) {
+                    is FlowFreeCell.Endpoint -> if (cell.color == color) count++
+                    is FlowFreeCell.Path -> if (cell.color == color) count++
+                    else -> {}
                 }
             }
         }
 
-        return false
-    }
-
-    /**
-     * ПРОВЕРКА ЧТО МЫ ПРОДОЛЖАЕМ ЛИНИЮ, А НЕ ОТХОДИМ ОТ НЕЕ
-     *
-     * Когда from - это Path, мы можем ходить только:
-     * 1. К пустой ячейке для продолжения линии
-     * 2. К Endpoint того же цвета для завершения линии
-     * 3. НЕ можем резко менять направление (создавать ответвления)
-     */
-    private fun isContinuingLine(
-        state: FlowFreeState,
-        from: FlowFreePosition,
-        to: FlowFreePosition,
-        color: Int
-    ): Boolean {
-        val sameColorNeighbors = getSameColorNeighbors(state, from, color)
-
-        // Если у from только один сосед того же цвета (значит мы на конце линии),
-        // то можем ходить в любом направлении (продолжать линию)
-        if (sameColorNeighbors.size == 1) {
-            return true
-        }
-
-        // Если у from два соседа того же цвета (значит мы в середине линии),
-        // то to должен быть одним из этих соседей (продолжение в том же направлении)
-        if (sameColorNeighbors.size == 2) {
-            return sameColorNeighbors.any { it == to }
-        }
-
-        // Если больше 2 соседей - это пересечение, что запрещено
-        return false
-    }
-
-    /**
-     * ПОЛУЧЕНИЕ СОСЕДЕЙ ТОГО ЖЕ ЦВЕТА
-     */
-    private fun getSameColorNeighbors(
-        state: FlowFreeState,
-        position: FlowFreePosition,
-        color: Int
-    ): List<FlowFreePosition> {
-        val neighbors = listOf(
-            FlowFreePosition(position.row - 1, position.col), // вверх
-            FlowFreePosition(position.row + 1, position.col), // вниз
-            FlowFreePosition(position.row, position.col - 1), // влево
-            FlowFreePosition(position.row, position.col + 1)  // вправо
-        )
-
-        return neighbors.filter { neighbor ->
-            state.isValidPosition(neighbor) &&
-                    state.getCellColor(neighbor) == color
-        }
+        return count
     }
 }

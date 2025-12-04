@@ -84,8 +84,8 @@ fun GameHubScreen() {
                 LevelGrid(
                     levels = state.levels,
                     currentBlock = state.currentBlock,
-                    onLevelClick = { levelId ->
-                        viewModel.onEvent(GameHubUiContract.Event.OnLevelClick(levelId))
+                    onLevelClick = { levelId, type ->
+                        viewModel.onEvent(GameHubUiContract.Event.OnLevelClick(levelId, type))
                     },
                     onPrevClick = { viewModel.onEvent(GameHubUiContract.Event.OnPrevBlockClick) },
                     onNextClick = { viewModel.onEvent(GameHubUiContract.Event.OnNextBlockClick) },

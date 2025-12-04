@@ -2,6 +2,7 @@ package com.defey.labpuzzles.di
 
 import com.defey.labpuzzles.achievements.AchievementsViewModel
 import com.defey.labpuzzles.chapters.ChaptersViewModel
+import com.defey.labpuzzles.flow_free.FlowFreeViewModel
 import com.defey.labpuzzles.gameHub.GameHubViewModel
 import com.defey.labpuzzles.menu.MainMenuViewModel
 import com.defey.labpuzzles.settings.SettingsViewModel
@@ -18,4 +19,5 @@ val featuresUiModule = module {
     viewModel { GameHubViewModel(get(), get()) }
     viewModel { WaterSortViewModel(get(), get(), get(), get(), get()) }
     viewModel { ChaptersViewModel(get()) }
+    viewModel { FlowFreeViewModel(get(), get(), get()) }
 }

@@ -14,10 +14,13 @@ import com.defey.labpuzzles.achievements.screen.AchievementsScreen
 import com.defey.labpuzzles.base.NavigationCommand
 import com.defey.labpuzzles.base.NavigationManager
 import com.defey.labpuzzles.chapters.screens.ChaptersScreen
+import com.defey.labpuzzles.flow_free.screens.FlowFreeScreen
 import com.defey.labpuzzles.gameHub.screens.GameHubScreen
 import com.defey.labpuzzles.managers.localization.LanguageManager
 import com.defey.labpuzzles.menu.screens.MainMenuScreen
 import com.defey.labpuzzles.models.Screen
+import com.defey.labpuzzles.models.Screen.Companion.ARGS_CHAPTER
+import com.defey.labpuzzles.models.Screen.Companion.ARGS_LEVEL_ID
 import com.defey.labpuzzles.settings.screens.SettingsScreen
 import com.defey.labpuzzles.splash.screens.SplashScreen
 import com.defey.labpuzzles.theme.AppTheme
@@ -96,7 +99,7 @@ fun App() {
                 composable(
                     route = Screen.GameHubScreen.ROUTE,
                     arguments = listOf(
-                        navArgument("chapter") {
+                        navArgument(ARGS_CHAPTER) {
                             type = NavType.StringType
                         }
                     )
@@ -107,12 +110,23 @@ fun App() {
                 composable(
                     route = Screen.WaterSortScreen.ROUTE,
                     arguments = listOf(
-                        navArgument("levelId") {
+                        navArgument(ARGS_LEVEL_ID) {
                             type = NavType.StringType
                         }
                     )
                 ) {
                     WaterSortScreen()
+                }
+
+                composable(
+                    route = Screen.FlowFreeScreen.ROUTE,
+                    arguments = listOf(
+                        navArgument(ARGS_LEVEL_ID) {
+                            type = NavType.StringType
+                        }
+                    )
+                ) {
+                    FlowFreeScreen()
                 }
 
                 composable(

@@ -46,7 +46,7 @@ fun LevelGrid(
     levels: List<GameHubUiContract.LevelUI>,
     currentBlock: LevelBlock,
     totalBlocks: Int = 5,
-    onLevelClick: (Int) -> Unit,
+    onLevelClick: (Int, GameType) -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -86,7 +86,7 @@ fun LevelGrid(
             items(levels) { level ->
                 LevelCell(
                     level = level,
-                    onClick = { onLevelClick(level.id) }
+                    onClick = { onLevelClick(level.id, level.gameType) }
                 )
             }
         }

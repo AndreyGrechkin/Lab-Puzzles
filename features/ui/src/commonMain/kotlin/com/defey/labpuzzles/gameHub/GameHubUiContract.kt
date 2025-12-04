@@ -29,7 +29,7 @@ class GameHubUiContract {
         object OnAchievementsClick : Event
         object OnSettingsClick : Event
         data class OnAddCurrencyClick(val currencyType: CurrencyType) : Event
-        data class OnLevelClick(val levelId: Int) : Event
+        data class OnLevelClick(val levelId: Int, val type: GameType) : Event
         object OnNextBlockClick : Event
         object OnPrevBlockClick : Event
     }

@@ -1,33 +1,14 @@
 package com.defey.labpuzzles.models
 
 enum class FlowFreeError : GameError {
-    // Попытка хода в несуществующую ячейку
-    INVALID_POSITION,
+    // Базовые ошибки
+    INVALID_POSITION,           // Позиция вне сетки
+    NOT_AN_ENDPOINT,            // Попытка начать не с Endpoint
+    NOT_ADJACENT_CELL,          // Ячейки не соседние
+    CELL_OCCUPIED,              // Ячейка уже занята
 
-    // Попытка начать линию не с точки
-    NOT_AN_ENDPOINT,
-
-    // Ячейка уже занята другим цветом
-    CELL_OCCUPIED,
-
-    // Линии пересекаются
-    CROSSING_LINES,
-
-    // Линия не соединяет точки того же цвета
-    WRONG_COLOR_CONNECTION,
-
-    // Попытка удалить точку
-    CANNOT_REMOVE_ENDPOINT,
-
-    // Ход вне допустимого направления (не по вертикали/горизонтали)
-    INVALID_DIRECTION,
-
-    // Разрыв существующей линии
-    BREAKING_LINE,
-
-    // Попытка провести линию через другую точку
-    CROSSING_ENDPOINT,
-
-    // Линия не смежная (ход не в соседнюю ячейку)
-    NOT_ADJACENT_CELL
+    // Ошибки линий
+    WRONG_COLOR_CONNECTION,     // Попытка соединить точки разных цветов
+    CROSSING_LINES,             // Линии пересекаются
+    CROSSING_ENDPOINT,          // Линия проходит через чужую точку
 }
